@@ -17,6 +17,7 @@ int main() {
 	std::array<int,cards_per_suit> suit = {2,4,6,8,10,12,14,1,1,1};
 	for(int i = 0; i < num_cards; i++) deck.at(i) = suit.at(i % cards_per_suit);
 	const short max_points = 15;
+	const short triple_points = 28;
 
 	//game variables
 	int dealer_hand;
@@ -41,6 +42,7 @@ int main() {
 		std::shuffle(deck.begin(), deck.end(), std::default_random_engine(seed++));
 
 		bool player_royal = false;
+		bool player_triple = false;
 		bool player_bust = false;
 
 		//first cards
@@ -72,17 +74,22 @@ int main() {
 		std::cin >> input;
 
 		if(input == 'h') {
+			input = 's';
 			secondcard = deck.at(icards++);
 			std::cout << "You have been dealt a " << secondcard / (double) 2 << std::endl;
 			player_hand += secondcard;
-			if(player_hand > max_points) {
+			if(player_hand == triple_points) {
+				std::cout << "You got a triple!" << std::endl;
+				player_triple = true;
+			}
+			else if(player_hand > max_points) {
 				std::cout << "Your hand is now worth " << player_hand / (double) 2 << std::endl;
 				std::cout << "You went bust!" << std::endl;
 				player_bust = true;
 			}
 			else if(player_hand == max_points) {
 				std::cout << "You got a royal!" << std::endl;
-				player_hand == max_points + 1;
+				player_hand++;
 				player_royal = true;
 			}
 			else {
@@ -127,21 +134,37 @@ int main() {
 
 			//determine winnings
 			//dealer goes bust, non-bust players are paid 1:1, royals are paid 2:1
-			if(dealer_hand > max_points) {
+			if(dealer_hand == triple_points && dealer_ncards == 2) {
+				std::cout << "The dealer has a triple!" << std::endl;
+				if(player_triple) {	hand_winnings = -bet_amount; } else { hand_winnings = -3*bet_amount; }
+				std::cout << "You have to pay " << -hand_winnings << std::endl;
+			}
+			else if(dealer_hand > max_points) {
 					std::cout << "The dealer is bust!" << std::endl;
-					if(player_royal) {	hand_winnings = 2*bet_amount; } else { hand_winnings = bet_amount; }
+					if(player_triple) {	hand_winnings = 3*bet_amount; }
+					else if (player_royal) {	hand_winnings = 2*bet_amount; }
+					else { hand_winnings = bet_amount; }
 					std::cout << "You are paid " << hand_winnings << std::endl;
 			}
 			//dealer has a royal, non-royal players pay 2:1, royals pay 1:1
 			else if(dealer_hand == max_points && dealer_ncards == 2) {
 				std::cout << "The dealer has a royal!" << std::endl;
-				if(player_royal) {	hand_winnings = -bet_amount; } else { hand_winnings = -2*bet_amount; }
+				if(player_triple) {
+					hand_winnings = 3*bet_amount;
+					std::cout << "You are paid " << hand_winnings << std::endl;
+				}
+				else {
+					if(player_royal) { hand_winnings = -bet_amount; } else { hand_winnings = -2*bet_amount; }
+					std::cout << "You have to pay " << -hand_winnings << std::endl;
+				}
 			}
 			//player wins and is paid 1:1, royals are paid 2:1
 			else {
 				std::cout << "The dealer stands on " << dealer_hand  / (double) 2 << std::endl;
 				if(player_hand > dealer_hand) {
-					if(player_royal) { hand_winnings = 2*bet_amount; } else { hand_winnings = bet_amount; }
+					if(player_triple) {	hand_winnings = 3*bet_amount; }
+					else if (player_royal) {	hand_winnings = 2*bet_amount; }
+					else { hand_winnings = bet_amount; }
 					std::cout << "You are paid " << hand_winnings << std::endl;
 				}
 				else {
