@@ -20,23 +20,23 @@ int main() {
 
 	//game variables
 	int dealer_hand;
+	short dealer_ncards;
+	int stands_dealer;
+	const int stands_default = 10;
 	int player_hand;
 	short icards;
-	short dealer_ncards;
 	int player_ncards;
-	const int stands_default = 10;
-	int stands_dealer;
-	int sum_winnings = 0;
 	int hand_winnings;
-	int card;
+	int sum_winnings = 0;
 	int bet_amount = 1;
 	char input = 'y';
+	int card;
 	int firstcard;
 
 	//random seed
 	unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
 
-	while(input == 'y') {
+	while(input != 'n') {
 		//shuffle the deck
 		std::shuffle(deck.begin(), deck.end(), std::default_random_engine(seed++));
 
@@ -50,8 +50,25 @@ int main() {
 
 		//player turns
 		std::cout << "Your first card is a " << player_hand / (double) 2 << std::endl;
+		while(firstcard == 8) {
+			std::cout << "Do you want to burn it (y/n)? ";
+			std::cin >> input;
+			if(input == 'y') {
+				firstcard = deck.at(icards++);
+				player_hand = firstcard;
+				std::cout << "Your new first card is a " << player_hand / (double) 2 << std::endl;
+			}
+			if(input == 'n') break;
+		}
+		std::cout << "How much do you want to bet? ";
+		std::cin >> bet_amount;
+		if(bet_amount < 1) {
+			std::cout << "Invalid amount, bet set to 1" << std::endl;
+			bet_amount = 1;
+		}
 		std::cout << "Hit (h) or Stand (s)? ";
 		std::cin >> input;
+
 		while(input == 'h') {
 			input = 's';
 			card = deck.at(icards++);
