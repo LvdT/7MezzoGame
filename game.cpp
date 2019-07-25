@@ -25,13 +25,13 @@ int main() {
 	const int stands_default = 10;
 	int player_hand;
 	short icards;
-	int player_ncards;
 	int hand_winnings;
 	int sum_winnings = 0;
 	int bet_amount = 1;
 	char input = 'y';
 	int card;
 	int firstcard;
+	int secondcard;
 
 	//random seed
 	unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -40,13 +40,15 @@ int main() {
 		//shuffle the deck
 		std::shuffle(deck.begin(), deck.end(), std::default_random_engine(seed++));
 
+		bool player_royal = false;
+		bool player_bust = false;
+
 		//first cards
 		icards = 0;
-		dealer_hand = deck.at(icards++);
-		dealer_ncards = 1;
 		firstcard = deck.at(icards++);
 		player_hand = firstcard;
-		player_ncards = 1;
+		dealer_hand = deck.at(icards++);
+		dealer_ncards = 1;
 
 		//player turns
 		std::cout << "Your first card is a " << player_hand / (double) 2 << std::endl;
@@ -69,25 +71,39 @@ int main() {
 		std::cout << "Hit (h) or Stand (s)? ";
 		std::cin >> input;
 
+		if(input == 'h') {
+			secondcard = deck.at(icards++);
+			std::cout << "You have been dealt a " << secondcard / (double) 2 << std::endl;
+			player_hand += secondcard;
+			if(player_hand > max_points) {
+				std::cout << "Your hand is now worth " << player_hand / (double) 2 << std::endl;
+				std::cout << "You went bust!" << std::endl;
+				player_bust = true;
+			}
+			else if(player_hand == max_points) {
+				std::cout << "You got a royal!" << std::endl;
+				player_hand == max_points + 1;
+				player_royal = true;
+			}
+			else {
+				std::cout << "Your hand is now worth " << player_hand / (double) 2 << std::endl;
+				std::cout << "Hit (h) or Stand (s)? ";
+				std::cin >> input;
+			}
+		}
+
 		while(input == 'h') {
 			input = 's';
 			card = deck.at(icards++);
 			player_hand += card;
-			player_ncards++;
 			std::cout << "You have been dealt a " << card / (double) 2 << std::endl;
 			if(player_hand > max_points) {
 				std::cout << "Your hand is now worth " << player_hand / (double) 2 << std::endl;
 				std::cout << "You went bust!" << std::endl;
-				player_hand = 0;
+				player_bust = true;
 			}
 			else if(player_hand == max_points) {
-				if(player_ncards == 2) {
-					player_hand = 99;
-					std::cout << "You got a royal!" << std::endl;
-				}
-				else {
 					std::cout << "You got 7½!" << std::endl;
-				}
 			}
 			else {
 				std::cout << "Your hand is now worth " << player_hand / (double) 2 << std::endl;
@@ -97,9 +113,9 @@ int main() {
 		}
 
 		//dealer turn
-		if(player_hand != 0) {
+		if(!player_bust) {
 			std::cout << "The dealer reveals the face-down card, it is a " << dealer_hand / (double) 2 << std::endl;
-			if (player_hand >= max_points) { stands_dealer = 15; } else {
+			if (player_hand >= max_points) { stands_dealer = max_points; } else {
 				stands_dealer = std::max(stands_default,player_hand-firstcard+1);
 			}
 			while(dealer_hand < stands_dealer) {
@@ -113,19 +129,19 @@ int main() {
 			//dealer goes bust, non-bust players are paid 1:1, royals are paid 2:1
 			if(dealer_hand > max_points) {
 					std::cout << "The dealer is bust!" << std::endl;
-					if(player_hand == 99) {	hand_winnings = 2*bet_amount; } else { hand_winnings = bet_amount; }
+					if(player_royal) {	hand_winnings = 2*bet_amount; } else { hand_winnings = bet_amount; }
 					std::cout << "You are paid " << hand_winnings << std::endl;
 			}
 			//dealer has a royal, non-royal players pay 2:1, royals pay 1:1
 			else if(dealer_hand == max_points && dealer_ncards == 2) {
 				std::cout << "The dealer has a royal!" << std::endl;
-				if(player_hand == 99) {	hand_winnings = -bet_amount; } else { hand_winnings = -2*bet_amount; }
+				if(player_royal) {	hand_winnings = -bet_amount; } else { hand_winnings = -2*bet_amount; }
 			}
 			//player wins and is paid 1:1, royals are paid 2:1
 			else {
 				std::cout << "The dealer stands on " << dealer_hand  / (double) 2 << std::endl;
 				if(player_hand > dealer_hand) {
-					if(player_hand == 99) {	hand_winnings = 2*bet_amount; } else { hand_winnings = bet_amount; }
+					if(player_royal) { hand_winnings = 2*bet_amount; } else { hand_winnings = bet_amount; }
 					std::cout << "You are paid " << hand_winnings << std::endl;
 				}
 				else {
